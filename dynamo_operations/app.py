@@ -3,6 +3,7 @@ import json
 from typing import Dict, Any
 
 import boto3
+import botocore.exceptions
 
 
 def read_from_db(table: 'boto3.resources.factory.dynamodb.Table',
@@ -43,14 +44,27 @@ def insert_into_db(table: 'boto3.resources.factory.dynamodb.Table',
 def delete_from_db(table: 'boto3.resources.factory.dynamodb.Table',
                    event: Dict[str, Any]) -> Dict[str, Any]:
     payload = json.loads(event['body'])['payload']['Key']
-    table.delete_item(Key=payload)
-    return {
-        'statusCode': 200,
-        'body': json.dumps({
-            'table': table.table_name,
-            'item_primary_key': payload['id']
-        }),
-    }
+    try:
+        table.delete_item(Key=payload, ConditionExpression='attribute_exists(id)')
+    except botocore.exceptions.ClientError as e:
+        if e.response['Error']['Code'] == 'ConditionalCheckFailedException':
+            return {
+                'statusCode': 404,
+                'body': json.dumps({
+                    'table': table.table_name,
+                    'item_primary_key': None
+                }),
+            }
+        else:
+            raise e
+    else:
+        return {
+            'statusCode': 200,
+            'body': json.dumps({
+                'table': table.table_name,
+                'item_primary_key': payload['id']
+            }),
+        }
 
 
 def lambda_handler(event, context) -> Dict[str, Any]:

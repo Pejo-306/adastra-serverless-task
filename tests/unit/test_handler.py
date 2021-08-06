@@ -387,3 +387,22 @@ def test_lambda_handler_with_delete_event(apigw_delete_event: Dict[str, Any],
                 Key={'id': '1234567890'},
                 ConditionExpression='attribute_exists(id)'
             )
+
+
+def test_lambda_handler_with_invalid_delete_event(apigw_delete_event: Dict[str, Any],
+                                                  table_name: str) -> None:
+
+    # Connect to the test DynamoDB table
+    dynamodb = boto3.resource('dynamodb')
+    table = dynamodb.Table(table_name)
+    # Make sure the test item does not already exist in the table
+    table_response = table.get_item(Key={'id': '1234567890'})
+    assert 'Item' not in table_response.keys()
+
+    response = app.lambda_handler(apigw_delete_event, None)
+    data = json.loads(response['body'])
+    assert response['statusCode'] == 404
+    assert 'table' in response['body']
+    assert data['table'] == table_name
+    assert 'item_primary_key' in response['body']
+    assert data['item_primary_key'] is None
