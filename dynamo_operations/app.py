@@ -40,10 +40,24 @@ def insert_into_db(table: 'boto3.resources.factory.dynamodb.Table',
     }
 
 
+def delete_from_db(table: 'boto3.resources.factory.dynamodb.Table',
+                   event: Dict[str, Any]) -> Dict[str, Any]:
+    payload = json.loads(event['body'])['payload']['Key']
+    table.delete_item(Key=payload)
+    return {
+        'statusCode': 200,
+        'body': json.dumps({
+            'table': table.table_name,
+            'item_primary_key': payload['id']
+        }),
+    }
+
+
 def lambda_handler(event, context) -> Dict[str, Any]:
     operations = {
         'read': read_from_db,
         'insert': insert_into_db,
+        'delete': delete_from_db
     }
 
     # Connect to the test DynamoDB table
