@@ -9,9 +9,14 @@ def read_from_db(table: 'boto3.resources.factory.dynamodb.Table',
                  event: Dict[str, Any]) -> Dict[str, Any]:
     item_pk = event['queryStringParameters']['id']
     table_response = table.get_item(Key={'id': item_pk})
-    if 'Item' not in table_response.keys():
-        # TODO: return error here
-        pass
+    if 'Item' not in table_response.keys():  # return not found response
+        return {
+            'statusCode': 404,
+            'body': json.dumps({
+                'table': table.table_name,
+                'item': None
+            }),
+        }
 
     return {
         'statusCode': 200,

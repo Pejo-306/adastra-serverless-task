@@ -190,6 +190,9 @@ def apigw_read_event() -> Dict[str, Any]:
     body = {
         "operation": "read",
     }
+    query_string_parameters = {
+        'id': '1234567890'
+    }
     return {
         "body": json.dumps(body),
         "resource": "/{proxy+}",
@@ -215,7 +218,7 @@ def apigw_read_event() -> Dict[str, Any]:
             },
             "stage": "prod",
         },
-        "queryStringParameters": {"id": "1234567890"},
+        "queryStringParameters": query_string_parameters ,
         "headers": {
             "Via": "1.1 08f323deadbeefa7af34d5feb414ce27.cloudfront.net (CloudFront)",
             "Accept-Language": "en-US,en;q=0.8",
@@ -323,3 +326,21 @@ def test_lambda_handler_with_read_event(apigw_read_event: Dict[str, Any],
             Key={'id': '1234567890'},
             ConditionExpression='attribute_exists(id)'
         )
+
+
+def test_lambda_handler_with_invalid_read_event(apigw_read_event: Dict[str, Any],
+                                                table_name: str) -> None:
+    # Connect to the test DynamoDB table
+    dynamodb = boto3.resource('dynamodb')
+    table = dynamodb.Table(table_name)
+    # Make sure the test item does not already exist in the table
+    table_response = table.get_item(Key={'id': '1234567890'})
+    assert 'Item' not in table_response.keys()
+
+    response = app.lambda_handler(apigw_read_event, None)
+    data = json.loads(response['body'])
+    assert response['statusCode'] == 404
+    assert 'table' in response['body']
+    assert data['table'] == table_name
+    assert 'item' in response['body']
+    assert data['item'] is None
