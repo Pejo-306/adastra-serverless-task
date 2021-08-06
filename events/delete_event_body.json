@@ -1,0 +1,8 @@
+{
+  "operation": "delete",
+  "payload": {
+    "Key": {
+      "id": "1"
+    }
+  }
+}
