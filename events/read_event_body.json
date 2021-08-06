@@ -1,0 +1,8 @@
+{
+    "operation": "read",
+    "payload": {
+        "Key": {
+            "id": "1"
+        }
+    }
+}
