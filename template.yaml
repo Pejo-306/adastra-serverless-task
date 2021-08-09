@@ -11,6 +11,23 @@ Globals:
     Timeout: 3
 
 Resources:
+  DynamoTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: nikolov2_records
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      StreamSpecification:
+        StreamViewType: NEW_IMAGE
+      Tags:
+        - Key: Owner
+          Value: nikolov2
+
   DynamoOperationsFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
@@ -23,6 +40,9 @@ Resources:
           Properties:
             Path: /records
             Method: get
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref DynamoTable
       Tags:
         Owner: nikolov2
 
@@ -39,3 +59,7 @@ Outputs:
   DynamoOperationsFunctionIamRole:
     Description: "Implicit IAM Role created for DynamoDB operations function"
     Value: !GetAtt DynamoOperationsFunctionRole.Arn
+  DynamoTable:
+    Description: "Simple DynamoDB table where records are stored"
+    Value: !GetAtt DynamoTable.Arn
+
