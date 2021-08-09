@@ -122,7 +122,8 @@ def lambda_handler(event: Dict[str, Any], context: 'LambdaContext') -> Dict[str,
     """AWS Lambda function to interact with a DynamoDB table
 
     The following DynamoDB operations are supported: READ, INSERT, DELETE.
-    The operation type must be specified in the Lambda event's body.
+    The operation type must be specified in the Lambda event's body. If
+    an invalid operation is parsed, a 400 Bad Request response is returned.
 
     An HTTP status response is always returned with the appropriate item
     details. The HTTP response's details are formed by the appropriate
@@ -142,12 +143,21 @@ def lambda_handler(event: Dict[str, Any], context: 'LambdaContext') -> Dict[str,
         'delete': delete_from_db
     }
 
+    # Deserialize the event's body
+    data = json.loads(event['body'])
+    if data['operation'] not in operations.keys():
+        return {
+            'statusCode': 400,
+            'body': json.dumps({
+                'message': f"Invalid DynamoDB operation specified; Valid operations: {list(operations.keys())}"
+            }),
+        }
+
     # Connect to the test DynamoDB table
     table_name = os.environ.get('TABLE_NAME')
     dynamodb = boto3.resource('dynamodb')
     table = dynamodb.Table(table_name)
 
     # Insert the item into the database table
-    data = json.loads(event['body'])
     response = operations[data['operation']](table, event)
     return response
