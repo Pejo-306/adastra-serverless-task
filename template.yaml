@@ -46,6 +46,24 @@ Resources:
       Tags:
         Owner: nikolov2
 
+  DynamoArchiveFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dynamo_archive/
+      Handler: app.lambda_handler
+      Runtime: python3.8
+      Events:
+        ObjectArchive:
+          Type: DynamoDB
+          Properties:
+            Stream: !GetAtt DynamoTable.StreamArn
+            StartingPosition: LATEST
+            BatchSize: 10
+      Policies:
+        - CloudWatchLogsFullAccess
+      Tags:
+        Owner: nikolov2
+
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
   # Find out more about other implicit resources you can reference within SAM
@@ -59,6 +77,12 @@ Outputs:
   DynamoOperationsFunctionIamRole:
     Description: "Implicit IAM Role created for DynamoDB operations function"
     Value: !GetAtt DynamoOperationsFunctionRole.Arn
+  DynamoArchiveFunction:
+    Description: "DynamoDB archive Lambda Function ARN"
+    Value: !GetAtt DynamoArchiveFunction.Arn
+  DynamoArchiveFunctionIamRole:
+    Description: "Implicit IAM Role created for DynamoDB archive function"
+    Value: !GetAtt DynamoArchiveFunctionRole.Arn
   DynamoTable:
     Description: "Simple DynamoDB table where records are stored"
     Value: !GetAtt DynamoTable.Arn
