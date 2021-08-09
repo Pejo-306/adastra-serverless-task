@@ -23,7 +23,20 @@ Resources:
         - AttributeName: id
           KeyType: HASH
       StreamSpecification:
-        StreamViewType: NEW_IMAGE
+        StreamViewType: OLD_IMAGE
+      Tags:
+        - Key: Owner
+          Value: nikolov2
+
+  ArchivingBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: nikolov2-serverless-task-archiving-bucket
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: TRUE
+        BlockPublicPolicy: TRUE
+        IgnorePublicAcls: TRUE
+        RestrictPublicBuckets: TRUE
       Tags:
         - Key: Owner
           Value: nikolov2
@@ -58,9 +71,13 @@ Resources:
           Properties:
             Stream: !GetAtt DynamoTable.StreamArn
             StartingPosition: LATEST
-            BatchSize: 10
+            BatchSize: 1
+      Environment:
+        Variables:
+          DESTINATION_BUCKET: !Ref ArchivingBucket
       Policies:
         - CloudWatchLogsFullAccess
+        - AmazonS3FullAccess
       Tags:
         Owner: nikolov2
 
@@ -84,6 +101,8 @@ Outputs:
     Description: "Implicit IAM Role created for DynamoDB archive function"
     Value: !GetAtt DynamoArchiveFunctionRole.Arn
   DynamoTable:
-    Description: "Simple DynamoDB table where records are stored"
+    Description: "DynamoDB table where records are stored"
     Value: !GetAtt DynamoTable.Arn
-
+  ArchivingBucket:
+    Description: "S3 bucket used for archiving expired records"
+    Value: !GetAtt ArchivingBucket.Arn
