@@ -12,6 +12,26 @@ logger.setLevel(logging.INFO)
 
 
 def lambda_handler(event: Dict[str, Any], context: 'LambdaContext') -> Dict[str, Any]:
+    """Archive deleted records from DynamoDB stream to S3 bucket
+
+    Upon successful archiving a 200 Success HTTP status is returned with a body,
+    containing the keys of all the archived objects. If the parsed DynamoDB stream
+    event is not a 'REMOVE' event, a 500 HTTP status response is returned. In any
+    case, the HTTP response is logged to CloudWatch.
+
+    The environment variable 'DESTINATION_BUCKET' specifies the target archiving
+    S3 bucket.
+
+    :param event: deserialized Lambda function event
+    :type event: dict
+    :param context: Lambda function context
+    :type context: LambdaContext
+
+    :raises KeyError: environment variable 'DESTINATION_BUCKET' is not defined
+
+    :return: HTTP status response
+    :rtype: dict
+    """
     # Connect to the destination S3 bucket
     destination_bucket_name = os.environ.get('DESTINATION_BUCKET')
     s3 = boto3.resource('s3')
