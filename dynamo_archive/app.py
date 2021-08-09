@@ -1,9 +1,14 @@
 import json
 import os
+import logging
 from datetime import datetime
 from typing import Dict, Any
 
 import boto3
+
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 
 def lambda_handler(event: Dict[str, Any], context: 'LambdaContext') -> Dict[str, Any]:
@@ -15,12 +20,13 @@ def lambda_handler(event: Dict[str, Any], context: 'LambdaContext') -> Dict[str,
     record_keys = []
     for record in event['Records']:  # archive each record in batch
         if record['eventName'] != 'REMOVE':  # invalid DynamoDB streams event
-            return {
+            response = {
                 'statusCode': 500,
                 'body': json.dumps({
                     'message': f"Invalid DynamoDB streams event passed ({record['eventName']})"
                 })
             }
+            break
 
         old_image = record['dynamodb']['OldImage']
         record_id = list(old_image['id'].values())[0]
@@ -28,11 +34,14 @@ def lambda_handler(event: Dict[str, Any], context: 'LambdaContext') -> Dict[str,
         record_body = json.dumps(old_image)
         destination_bucket.put_object(Key=record_key, Body=record_body)
         record_keys.append(record_key)
+    else:
+        response = {
+            'statusCode': 200,
+            'body': json.dumps({
+                'message': f"Successfully archived to s3://{destination_bucket_name}",
+                'records': record_keys
+            })
+        }
 
-    return {
-        'statusCode': 200,
-        'body': json.dumps({
-            'message': f"Successfully archived to s3://{destination_bucket_name}",
-            'records': record_keys
-        })
-    }
+    logger.info(response)
+    return response
