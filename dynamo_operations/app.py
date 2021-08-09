@@ -36,7 +36,9 @@ def insert_into_db(table: 'boto3.resources.factory.dynamodb.Table',
         'statusCode': 200,
         'body': json.dumps({
             'table': table.table_name,
-            'item_primary_key': payload['id']
+            'item': {
+                'id': payload['id']
+            }
         }),
     }
 
@@ -52,7 +54,7 @@ def delete_from_db(table: 'boto3.resources.factory.dynamodb.Table',
                 'statusCode': 404,
                 'body': json.dumps({
                     'table': table.table_name,
-                    'item_primary_key': None
+                    'item': None
                 }),
             }
         else:
@@ -62,12 +64,14 @@ def delete_from_db(table: 'boto3.resources.factory.dynamodb.Table',
             'statusCode': 200,
             'body': json.dumps({
                 'table': table.table_name,
-                'item_primary_key': payload['id']
+                'item': {
+                    'id': payload['id']
+                }
             }),
         }
 
 
-def lambda_handler(event, context) -> Dict[str, Any]:
+def lambda_handler(event: Dict[str, Any], context: 'LambdaContext') -> Dict[str, Any]:
     operations = {
         'read': read_from_db,
         'insert': insert_into_db,
