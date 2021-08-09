@@ -12,9 +12,16 @@ def lambda_handler(event: Dict[str, Any], context: 'LambdaContext') -> Dict[str,
     s3 = boto3.resource('s3')
     destination_bucket = s3.Bucket(destination_bucket_name)
 
-    # Archive each record in batch
     record_keys = []
-    for record in event['Records']:
+    for record in event['Records']:  # archive each record in batch
+        if record['eventName'] != 'REMOVE':  # invalid DynamoDB streams event
+            return {
+                'statusCode': 500,
+                'body': json.dumps({
+                    'message': f"Invalid DynamoDB streams event passed ({record['eventName']})"
+                })
+            }
+
         old_image = record['dynamodb']['OldImage']
         record_id = list(old_image['id'].values())[0]
         record_key = f'{record_id}_{datetime.now().strftime("%Y-%m-%d %H.%M.%S.%f")}.json'
