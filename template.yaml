@@ -59,6 +59,11 @@ Resources:
             RequestParameters:
               - method.request.querystring.id:
                   Required: true
+        InsertRecord:
+          Type: Api
+          Properties:
+            Path: /records
+            Method: post
       Environment:
         Variables:
           TABLE_NAME: !Ref DynamoTable
