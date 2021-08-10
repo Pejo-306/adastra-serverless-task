@@ -22,6 +22,8 @@ def lambda_handler(event: Dict[str, Any], context: 'LambdaContext') -> Dict[str,
     :param context: Lambda function context
     :type context: LambdaContext
 
+    :raises KeyError: environment variable 'TABLE_NAME' is not defined
+
     :return: HTTP status response
     :rtype: dict
     """
