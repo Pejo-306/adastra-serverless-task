@@ -121,7 +121,7 @@ def insert_into_db(table: 'boto3.resources.factory.dynamodb.Table',
     :return: HTTP success response
     :rtype: dict
     """
-    payload = json.loads(event['body'])['payload']['Item']
+    payload = json.loads(event['body'], use_decimal=True)['payload']['Item']
     region = os.environ.get('AWS_REGION')
     region_tz = REGION_TIMEZONES[region]
     expiration_time = (datetime.now(region_tz) + EXPIRY_DELTA).timestamp()
