@@ -56,9 +56,14 @@ Resources:
           Properties:
             Path: /records
             Method: get
+            RequestParameters:
+              - method.request.querystring.id:
+                  Required: true
       Environment:
         Variables:
           TABLE_NAME: !Ref DynamoTable
+      Policies:
+        - AmazonDynamoDBFullAccess
       Tags:
         Owner: nikolov2
 
