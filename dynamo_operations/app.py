@@ -1,13 +1,16 @@
 import os
-import json
 from decimal import Decimal
 from datetime import datetime
 from typing import Dict, Any
 
+import simplejson as json
 import boto3
 import botocore.exceptions
 
-from dynamo_operations.definitions import REGION_TIMEZONES, EXPIRY_DELTA
+try:  # when Lambda handler is __main__
+    from definitions import REGION_TIMEZONES, EXPIRY_DELTA
+except ImportError:  # when Lambda handler is imported in another file
+    from .definitions import REGION_TIMEZONES, EXPIRY_DELTA
 
 
 def lambda_handler(event: Dict[str, Any], context: 'LambdaContext') -> Dict[str, Any]:
@@ -37,9 +40,9 @@ def lambda_handler(event: Dict[str, Any], context: 'LambdaContext') -> Dict[str,
         'delete': delete_from_db
     }
 
-    # Deserialize the event's body
-    data = json.loads(event['body'])
-    if data['operation'] not in operations.keys():
+    # Determine operation to handle
+    operation = 'read' if event['httpMethod'] == 'GET' else json.loads(event['body'])['operation']
+    if operation not in operations.keys():
         return {
             'statusCode': 400,
             'body': json.dumps({
@@ -53,7 +56,7 @@ def lambda_handler(event: Dict[str, Any], context: 'LambdaContext') -> Dict[str,
     table = dynamodb.Table(table_name)
 
     # Insert the item into the database table
-    response = operations[data['operation']](table, event)
+    response = operations[operation](table, event)
     return response
 
 
@@ -92,7 +95,7 @@ def read_from_db(table: 'boto3.resources.factory.dynamodb.Table',
         'body': json.dumps({
             'table': table.table_name,
             'item': table_response['Item']
-        }),
+        }, use_decimal=True),
     }
 
 

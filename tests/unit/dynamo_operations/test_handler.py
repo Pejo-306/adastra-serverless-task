@@ -75,14 +75,10 @@ def apigw_insert_event() -> Dict[str, Any]:
 
 @pytest.fixture()
 def apigw_read_event() -> Dict[str, Any]:
-    body = {
-        "operation": "read",
-    }
     query_string_parameters = {
         'id': '1234567890'
     }
     return {
-        "body": json.dumps(body),
         "resource": "/{proxy+}",
         "requestContext": {
             "resourceId": "123456",

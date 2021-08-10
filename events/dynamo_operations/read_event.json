@@ -1,5 +1,4 @@
 {
-  "body": "{\"operation\": \"read\"}",
   "resource": "/{proxy+}",
   "requestContext": {
     "resourceId": "123456",
