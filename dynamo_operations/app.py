@@ -1,17 +1,13 @@
 import os
 import json
 from decimal import Decimal
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Dict, Any
 
-import pytz
 import boto3
 import botocore.exceptions
 
-
-REGION_TIMEZONES = {
-    'eu-west-1': pytz.timezone('Europe/Dublin')
-}
+from dynamo_operations.definitions import REGION_TIMEZONES, EXPIRY_DELTA
 
 
 def lambda_handler(event: Dict[str, Any], context: 'LambdaContext') -> Dict[str, Any]:
@@ -116,11 +112,10 @@ def insert_into_db(table: 'boto3.resources.factory.dynamodb.Table',
     :rtype: dict
     """
     # TODO: document ttl
-    expiry_delta = timedelta(minutes=1)
     region = os.environ.get('AWS_REGION')
     region_tz = REGION_TIMEZONES[region]
     payload = json.loads(event['body'])['payload']['Item']
-    expiration_time = (datetime.now(region_tz) + expiry_delta).timestamp()
+    expiration_time = (datetime.now(region_tz) + EXPIRY_DELTA).timestamp()
     payload['expiration_time'] = Decimal(expiration_time)
     table.put_item(Item=payload)
     return {
