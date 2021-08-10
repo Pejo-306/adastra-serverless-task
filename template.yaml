@@ -8,7 +8,7 @@ Description: >
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
   Function:
-    Timeout: 3
+    Timeout: 6
 
 Resources:
   DynamoTable:
@@ -24,6 +24,9 @@ Resources:
           KeyType: HASH
       StreamSpecification:
         StreamViewType: OLD_IMAGE
+      TimeToLiveSpecification:
+        AttributeName: expiration_time
+        Enabled: true
       Tags:
         - Key: Owner
           Value: nikolov2
@@ -71,7 +74,7 @@ Resources:
           Properties:
             Stream: !GetAtt DynamoTable.StreamArn
             StartingPosition: LATEST
-            BatchSize: 1
+            BatchSize: 10
       Environment:
         Variables:
           DESTINATION_BUCKET: !Ref ArchivingBucket
