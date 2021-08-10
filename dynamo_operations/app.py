@@ -100,6 +100,11 @@ def insert_into_db(table: 'boto3.resources.factory.dynamodb.Table',
                    event: Dict[str, Any]) -> Dict[str, Any]:
     """Insert an item into the DynamoDB table
 
+    Before the item is inserted, an additional field named 'expiration_time'
+    is created and set to the AWS region's current time + a constant time delta.
+    This field's value is a saved as a UNIX epoch timestamp and used by DynamoDB
+    TTL to expire records.
+
     If the item with the specified primary key already exists, the former
     is overridden. In any case a 200 Success HTTP status is returned.
 
@@ -108,15 +113,17 @@ def insert_into_db(table: 'boto3.resources.factory.dynamodb.Table',
     :param event: deserialized API Gateway event
     :type: dict
 
+    :raises KeyError: environment variable 'AWS_REGION' is not defined
+
     :return: HTTP success response
     :rtype: dict
     """
-    # TODO: document ttl
+    payload = json.loads(event['body'])['payload']['Item']
     region = os.environ.get('AWS_REGION')
     region_tz = REGION_TIMEZONES[region]
-    payload = json.loads(event['body'])['payload']['Item']
     expiration_time = (datetime.now(region_tz) + EXPIRY_DELTA).timestamp()
     payload['expiration_time'] = Decimal(expiration_time)
+
     table.put_item(Item=payload)
     return {
         'statusCode': 200,
