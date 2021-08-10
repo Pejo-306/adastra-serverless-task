@@ -300,6 +300,7 @@ def test_lambda_handler_with_insert_event(apigw_insert_event: Dict[str, Any],
         assert item['ts'] == '2021-08-06 14:43:23.687000'
         assert 'name' in item.keys()
         assert item['name'] == 'test_item'
+        assert 'expiration_time' in item.keys()
     finally:
         # Ensure the test item is deleted
         table.delete_item(

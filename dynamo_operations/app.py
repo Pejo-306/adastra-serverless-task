@@ -1,5 +1,7 @@
 import os
 import json
+from decimal import Decimal
+from datetime import datetime, timedelta, timezone
 from typing import Dict, Any
 
 import boto3
@@ -107,7 +109,11 @@ def insert_into_db(table: 'boto3.resources.factory.dynamodb.Table',
     :return: HTTP success response
     :rtype: dict
     """
+    expiry_delta = timedelta(minutes=2)
     payload = json.loads(event['body'])['payload']['Item']
+    # TODO: document ttl
+    expiration_time = (datetime.now() + expiry_delta).replace(tzinfo=timezone.utc).timestamp()
+    payload['expiration_time'] = Decimal(expiration_time)
     table.put_item(Item=payload)
     return {
         'statusCode': 200,
