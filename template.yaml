@@ -64,6 +64,11 @@ Resources:
           Properties:
             Path: /records
             Method: post
+        DeleteRecord:
+          Type: Api
+          Properties:
+            Path: /records
+            Method: delete
       Environment:
         Variables:
           TABLE_NAME: !Ref DynamoTable
